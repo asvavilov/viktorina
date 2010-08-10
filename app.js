@@ -40,11 +40,30 @@ app.get('/', function(req, res){
 app.listen(3000);
 
 
+// Other
+
 var io = require('socket.io');
 io = io.listen(app);
+var
+	buffer = [], 
+	json = JSON.stringify;
+
 //var sys = require('sys');
 io.on('connection', function(client){
     //console.log(client);
     // ok!!!
     //...
+	client.send(json({ buffer: buffer }));
+	client.broadcast(json({ announcement: client.sessionId + ' connected' }));
+
+	client.on('message', function(message){
+		var msg = { message: [client.sessionId, message] };
+		buffer.push(msg);
+		if (buffer.length > 15) buffer.shift();
+		client.broadcast(json(msg));
+	});
+
+	client.on('disconnect', function(){
+		client.broadcast(json({ announcement: client.sessionId + ' disconnected' }));
+	});
 });
