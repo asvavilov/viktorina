@@ -1,0 +1,12 @@
+!!!
+html
+  head
+    title= title
+    link(rel='stylesheet', href='/stylesheets/style.css')
+    script(src='/client/socket.io.js')
+    script(src='/json.js')
+    :javascript
+      | io.setPath('/client/');
+      | var socket = new io.Socket(null, {rememberTransport: false, port: 3000});
+      | socket.connect(3000);
+  body!= body
