@@ -67,3 +67,9 @@ io.on('connection', function(client){
 		client.broadcast(json({ announcement: client.sessionId + ' disconnected' }));
 	});
 });
+
+/*
+setInterval(function(){
+//	//console.log(io.clients)
+}, 1000);
+*/
