@@ -111,6 +111,8 @@ setInterval(function(){
 var mongoose = require('mongoose').Mongoose;
 var db = mongoose.connect('mongodb://localhost/quiz');
 //console.log(db);
+require('./libs/room');
+mongoose.model('Room', RoomModel);
 require('./libs/user');
 mongoose.model('User', UserModel);
 var User = db.model('User');
