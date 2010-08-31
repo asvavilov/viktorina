@@ -8,33 +8,44 @@ var express = require('express');
 //var connect = require('connect');
 var MemoryStore = require('connect/middleware/session/memory');
 
+var mongoose = require('mongoose').Mongoose;
+var db = mongoose.connect('mongodb://localhost/quiz');
+require('./libs/user');
+require('./libs/room');
+
+mongoose.model('User', UserModel);
+mongoose.model('Room', RoomModel);
+var User = db.model('User');
+var Room = db.model('Room');
+
 var app = express.createServer();
 
 // Configuration
 
 app.configure(function(){
-    app.set('views', __dirname + '/views');
-    app.use(express.bodyDecoder());
-    app.use(express.methodOverride());
-    app.use(express.compiler({ src: __dirname + '/public', enable: ['less', 'sass'] })); // less, sass
-    app.use(express.cookieDecoder());
-    app.use(express.session({ store: new MemoryStore({ reapInterval: 60000 * 10, maxAge: 60000 * 30 }) }));
-    app.use(app.router);
-    app.use(express.staticProvider(__dirname + '/public'));
+	app.set('views', __dirname + '/views');
+	app.use(express.bodyDecoder());
+	app.use(express.methodOverride());
+	app.use(express.compiler({ src: __dirname + '/public', enable: ['less', 'sass'] })); // less, sass
+	app.use(express.cookieDecoder());
+	app.use(express.session({ store: new MemoryStore({ reapInterval: 60000 * 10, maxAge: 60000 * 30 }) }));
+	app.use(app.router);
+	app.use(express.staticProvider(__dirname + '/public'));
 });
 
 app.configure('development', function(){
-    app.use(express.errorHandler({ dumpExceptions: true, showStack: true })); 
+	app.use(express.errorHandler({ dumpExceptions: true, showStack: true })); 
 });
 
 app.configure('production', function(){
-   app.use(express.errorHandler()); 
+	app.use(express.errorHandler()); 
 });
 
 // Routes
 
 app.get('/', function(req, res){
-    res.render('index.jade');
+console.log(req.session)
+	res.render('index.jade');
 });
 
 app.get('/room', function(req, res){
@@ -56,13 +67,31 @@ app.post('/login', function(req, res){
 		  //console.log('STATUS: ' + response.statusCode);
 		  //console.log('HEADERS: ' + JSON.stringify(response.headers));
 		  //response.setEncoding('utf8');
-		  response.on('data', function (chunk) {
-			//console.log('BODY: ' + chunk);
-//console.log(JSON.parse(chunk));
-// {"error_type":"token_validation","error_message":"Empty token value."}
-// JSON.parse(chunk)
+			response.on('data', function (chunk) {
+			  //console.log('BODY: ' + chunk);
+  //console.log(JSON.parse(chunk));
+  // {"error_type":"token_validation","error_message":"Empty token value."}
+				try {
+					var res_json = JSON.parse(chunk);
+				} catch (e) {
+					// TODO !!! parse error
+					res_json = {'error_type': 'JSON::Parse', 'error_message': 'Error parsing JSON'}
+					//return ;
+				}
+				if (!res['error_type']) {
+					User.find({'identity': res_json['identity']}).one(function(u){
+						if (!u) {
+							u = new User();
+							u.identity = res_json['identity'];
+							u.provider = res_json['provider'];
+							u.save();
+						}
+						req.session['user'] = {'identity': u.identity, 'provider': u.provider};
+						//console.log(u)
+					});
+				}
 res.render('login.jade', {locals: {json: chunk}}); // temporary, after be redirect
-		  });
+			});
 		});
 	} else {
 		// not found *token*
@@ -105,16 +134,4 @@ io.on('connection', function(client){
 setInterval(function(){
 //	//console.log(io.clients)
 }, 1000);
-*/
-
-/*
-var mongoose = require('mongoose').Mongoose;
-var db = mongoose.connect('mongodb://localhost/quiz');
-//console.log(db);
-require('./libs/room');
-mongoose.model('Room', RoomModel);
-require('./libs/user');
-mongoose.model('User', UserModel);
-var User = db.model('User');
-User.find().all(function(res){console.log(res)})
 */

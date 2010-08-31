@@ -1,7 +1,7 @@
 UserModel = {
 	properties: [
 		'nickname', 'email', 'first_name', 'last_name', 'age', 'created_at', 'updated_at',
-		 'identity', 'provider' # loginza
+		 'identity', 'provider' // loginza
 	],
 	cast: {
 		age: Number//,
