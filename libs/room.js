@@ -1,6 +1,6 @@
 RoomModel = {
-	properties: [
-		'label', 'title'
-	],
-	indexes: ['label']
+  properties: [
+    'label', 'title'
+  ],
+  indexes: ['label']
 }
