@@ -56,6 +56,11 @@ app.get('/room/:room?', function(req, res){
     res.render('rooms', {'locals': {'rooms': Room.find().all()}});
   } else {
     Room.find({'label': req.params.room}).one(function(r){
+
+// FIXME временно
+r = function(){this.title=req.params.room}
+r = new r()
+
       res.render('room', {
         locals: {
           room: r
