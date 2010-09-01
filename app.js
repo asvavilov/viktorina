@@ -1,5 +1,6 @@
 //EXPRESS_ENV=production|development node app.js
 
+//var sys = require('sys');
 var express = require('express');
 //var connect = require('connect');
 var MemoryStore = require('connect/middleware/session/memory');
@@ -111,11 +112,15 @@ app.post('/login', function(req, res){
   }
 });
 
+// Start app
+
+app.listen(3000);
+
 // Socket.IO
 
 var buffer = [];
 
-//var sys = require('sys');
+io = io.listen(app);
 io.on('connection', function(client){
   //console.log(client);
   // ok!!!
@@ -140,7 +145,3 @@ setInterval(function(){
 //  //console.log(io.clients)
 }, 1000);
 */
-
-// Start app
-
-app.listen(3000);
