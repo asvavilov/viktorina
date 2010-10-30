@@ -46,7 +46,7 @@ app.configure('production', function(){
 
 app.get('/', function(req, res){
 //console.log(req.session)
-  res.render('index');
+  res.render('index', {'locals': {'host': req.headers.host}});
 });
 
 app.get('/room/:room?', function(req, res){
