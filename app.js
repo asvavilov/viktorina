@@ -2,16 +2,18 @@
 
 //var sys = require('sys');
 var express = require('express');
-//var connect = require('connect');
-var MemoryStore = require('connect/middleware/session/memory');
+var connect = require('connect');
+var MemoryStore = connect.session.MemoryStore;
 
-var mongoose = require('mongoose').Mongoose;
+var mongoose = require('mongoose');
+//var Schema = mongoose.Schema;
 var db = mongoose.connect('mongodb://localhost/quiz');
 require('./libs/user');
 require('./libs/room');
 
-mongoose.model('User', UserModel);
-mongoose.model('Room', RoomModel);
+mongoose.model('User', UserSchema);
+mongoose.model('Room', RoomSchema);
+
 var User = db.model('User');
 var Room = db.model('Room');
 
@@ -25,13 +27,13 @@ var json = JSON.stringify;
 app.configure(function(){
   app.set('home', '/');
   app.set('view engine', 'jade');
-  app.use(express.bodyDecoder());
+  app.use(express.bodyParser());
   app.use(express.methodOverride());
   app.use(express.compiler({ src: __dirname + '/public', enable: ['less', 'sass'] })); // less, sass
-  app.use(express.cookieDecoder());
-  app.use(express.session({ store: new MemoryStore({ reapInterval: 60000 * 10, maxAge: 60000 * 30 }) }));
+  app.use(express.cookieParser());
+  app.use(express.session({ secret: 'thisismysperpupersekretnykod', store: new MemoryStore({ reapInterval: 60000 * 10, maxAge: 60000 * 30 }) }));
   app.use(app.router);
-  app.use(express.staticProvider(__dirname + '/public'));
+  app.use(express.static(__dirname + '/public'));
 });
 
 app.configure('development', function(){
@@ -55,7 +57,7 @@ app.get('/room/:room?', function(req, res){
   if (!req.params.room) {
     res.render('rooms', {'locals': {'rooms': Room.find().all()}});
   } else {
-    Room.find({'label': req.params.room}).one(function(r){
+    Room.findOne({'label': req.params.room}, function(err, r){
 
 // FIXME временно
 r = function(){this.title=req.params.room}
@@ -92,7 +94,7 @@ app.post('/login', function(req, res){
           //return ;
         }
         if (!res_json['error_type']) {
-          User.find({'identity': res_json['identity']}).one(function(u){
+          User.findOne({'identity': res_json['identity']}, function(err, u){
             if (!u) {
               u = new User();
               u.identity = res_json['identity'];
