@@ -7,6 +7,13 @@ html
     script(src='/json.js')
     script(src='/client/socket.io.js')
     script
+
+      //var socket = new io.Socket({node_server_url}); 
+      //socket.connect();
+      //socket.on('connect', function(){ … }) 
+      //socket.on('message', function(){ … }) 
+      //socket.on('disconnect', function(){ … }) 
+
       //io.setPath('/client/');
       //var socket = new io.Socket(null, {rememberTransport: false, port: 3000});
       //socket.connect(3000);
@@ -30,7 +37,7 @@ html
       };
       var socket = new io.Socket(null, {rememberTransport: false, port: 3000});
       socket.connect();
-      socket.addEvent('message', function(data){
+      socket.on('message', function(data){
         var obj = JSON.parse(data);
         if ('buffer' in obj){
           document.getElementById('form').style.display='block';
