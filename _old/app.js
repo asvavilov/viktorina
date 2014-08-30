@@ -8,12 +8,30 @@
 
 //EXPRESS_ENV=production|development node app.js
 
-//var sys = require('sys');
 var express = require('express');
-var connect = require('connect');
-var MemoryStore = connect.session.MemoryStore;
-
+var app = express();
+var server = require('http').Server(app);
+var io = require('socket.io');
 var mongoose = require('mongoose');
+//var json = JSON.stringify;
+var path = require('path'); // модуль для парсинга пути
+
+
+app.set('views', __dirname + '/views');
+app.set('view engine', 'jade');
+app.use(express.static(path.join(__dirname, "public"))); // запуск статического файлового сервера, который смотрит на папку public/ (в нашем случае отдает index.html)
+
+/*
+app.configure('development', function(){
+	app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
+});
+
+app.configure('production', function(){
+	app.use(express.errorHandler());
+});
+*/
+
+
 //var Schema = mongoose.Schema;
 var db = mongoose.connect('mongodb://localhost/quiz');
 require('./libs/user');
@@ -25,59 +43,33 @@ mongoose.model('Room', RoomSchema);
 var User = db.model('User');
 var Room = db.model('Room');
 
-var app = express.createServer();
-var io = require('socket.io');
-
-var json = JSON.stringify;
-
-// Configuration
-
-app.configure(function(){
-  app.set('home', '/');
-  app.set('view engine', 'jade');
-  app.use(express.bodyParser());
-  app.use(express.methodOverride());
-  app.use(express.compiler({ src: __dirname + '/public', enable: ['less', 'sass'] })); // less, sass
-  app.use(express.cookieParser());
-  app.use(express.session({ secret: 'thisismysperpupersekretnykod', store: new MemoryStore({ reapInterval: 60000 * 10, maxAge: 60000 * 30 }) }));
-  app.use(app.router);
-  app.use(express.static(__dirname + '/public'));
-});
-
-app.configure('development', function(){
-  app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
-});
-
-app.configure('production', function(){
-  app.use(express.errorHandler());
-});
 
 // Routes
 
 app.get('/', function(req, res){
 //console.log(req.session)
-  res.render('index', {'locals': {'host': req.headers.host}});
+	res.render('index', {'locals': {'host': req.headers.host}});
 });
 
 app.get('/room/:room?', function(req, res){
-  // TODO rooms from database
-  //var room = ...
-  if (!req.params.room) {
-    res.render('rooms', {'locals': {'rooms': Room.find().all()}});
-  } else {
-    Room.findOne({'label': req.params.room}, function(err, r){
+	// TODO rooms from database
+	//var room = ...
+	if (!req.params.room) {
+		res.render('rooms', {'locals': {'rooms': Room.find().all()}});
+	} else {
+		Room.findOne({'label': req.params.room}, function(err, r){
 
 // FIXME временно
-r = function(){this.title=req.params.room}
-r = new r()
+r = function(){this.title=req.params.room;};
+r = new r();
 
-      res.render('room', {
-        locals: {
-          room: r
-        }
-      });
-    });
-  }
+			res.render('room', {
+				locals: {
+					room: r
+				}
+			});
+		});
+	}
 });
 
 app.post('/login', function(req, res){
@@ -85,7 +77,7 @@ app.post('/login', function(req, res){
     // http://loginza.ru/api/authinfo?token=[TOKEN_KEY_VALUE]
     var http = require('http');
     var loginza = http.createClient(80, 'loginza.ru');
-    var request = loginza.request('GET', '/api/authinfo?token='+req.body.token, {'host': 'localhost'});
+    var request = loginza.request('GET', '/api/authinfo?token='+req.body.token, {'host': 'yasla.net'});
     request.end();
     request.on('response', function(response){
       //console.log('STATUS: ' + response.statusCode);
@@ -98,7 +90,7 @@ app.post('/login', function(req, res){
           res_json = JSON.parse(chunk);
         } catch (e) {
           // TODO parse error
-          res_json = {'error_type': 'JSON::Parse', 'error_message': 'Error parsing JSON'}
+          res_json = {'error_type': 'JSON::Parse', 'error_message': 'Error parsing JSON'};
           //return ;
         }
         if (!res_json['error_type']) {
@@ -129,13 +121,15 @@ app.post('/login', function(req, res){
 
 // Start app
 
-app.listen(3000);
+app.listen(3000, function(){
+    console.log('Express server listening on port 3000');
+});
 
 // Socket.IO
 
 var buffer = [];
 
-io = io.listen(app);
+io = io.listen(server);
 io.on('connection', function(client){
   //console.log(client);
   // ok!!!

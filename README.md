@@ -9,3 +9,7 @@ half-demo project - chat-quiz
 * socket.io
 * loginza
 * mongodb
+
+New app start:
+
+> ./bin/www
